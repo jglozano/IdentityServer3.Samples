@@ -27,6 +27,33 @@ namespace IdentityServer3.Host.Config
         {
             return new List<Client>
             {
+                new Client
+                {
+                    Enabled = true,
+                    ClientName = "client1",
+                    ClientId = "client1",
+                    Flow = Flows.Hybrid,
+                    RequireConsent = false,
+                    AccessTokenType = AccessTokenType.Jwt,
+                    ClientSecrets = new List<Secret>
+                    {
+                        new Secret("test".Sha256())
+                    },
+                    AllowedScopes = new List<string>
+                    {
+                        Constants.StandardScopes.OpenId,
+                        Constants.StandardScopes.Profile,
+                        Constants.StandardScopes.Email
+                    },
+                    RedirectUris = new List<string>
+                    {
+                        "http://localhost:4567/"
+                    },
+                    PostLogoutRedirectUris = new List<string>
+                    {
+                        "http://localhost:4567/"
+                    }
+                },
                 /////////////////////////////////////////////////////////////
                 // Client Credentials With Reference Token
                 /////////////////////////////////////////////////////////////

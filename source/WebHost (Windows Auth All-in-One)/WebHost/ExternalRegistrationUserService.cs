@@ -6,12 +6,24 @@ using System.Threading.Tasks;
 using IdentityServer3.Core;
 using IdentityServer3.Core.Extensions;
 using IdentityServer3.Core.Models;
+using IdentityServer3.Core.Services;
 using IdentityServer3.Core.Services.Default;
+using Microsoft.Owin;
+using WebHost.Services;
 
 namespace WebHost
 {
     public class ExternalRegistrationUserService : UserServiceBase
     {
+        private readonly OwinEnvironmentService owinService;
+        private readonly IConfigurationService configService;
+
+        public ExternalRegistrationUserService(OwinEnvironmentService owinService, IConfigurationService configService)
+        {
+            this.owinService = owinService;
+            this.configService = configService;
+        }
+
         public class CustomUser
         {
             public string Subject { get; set; }
@@ -19,8 +31,34 @@ namespace WebHost
             public string ProviderID { get; set; }
             public List<Claim> Claims { get; set; }
         }
-        
+
         public static List<CustomUser> Users = new List<CustomUser>();
+
+        public override Task PreAuthenticateAsync(PreAuthenticationContext context)
+        {
+            var owinContext = new OwinContext(owinService.Environment);
+            var request = owinContext.Request;
+
+            var ranges = configService.GetClientRanges();
+            if (ranges == null || ranges.Length == 0)
+            {
+                return Task.FromResult(0);
+            }
+
+            var clientAddress = request.GetClientAddress();
+            if (clientAddress == null)
+            {
+                return Task.FromResult(0);
+            }
+
+            var isInRange = ranges.Any(r => r.Contains(clientAddress));
+            if (isInRange)
+            {
+                context.SignInMessage.IdP = "windows";
+            }
+
+            return Task.FromResult(0);
+        }
 
         public override Task AuthenticateExternalAsync(ExternalAuthenticationContext context)
         {
@@ -31,9 +69,11 @@ namespace WebHost
             {
                 // new user, so add them here
                 var nameClaim = context.ExternalIdentity.Claims.First(x => x.Type == Constants.ClaimTypes.Name);
-                if (nameClaim != null) name = nameClaim.Value;
+                if (nameClaim != null)
+                    name = nameClaim.Value;
 
-                user = new CustomUser { 
+                user = new CustomUser
+                {
                     Subject = Guid.NewGuid().ToString(),
                     Provider = context.ExternalIdentity.Provider,
                     ProviderID = context.ExternalIdentity.ProviderId,
@@ -43,7 +83,7 @@ namespace WebHost
             }
 
             name = user.Claims.First(x => x.Type == Constants.ClaimTypes.Name).Value;
-            context.AuthenticateResult = new AuthenticateResult(user.Subject, name, identityProvider:user.Provider);
+            context.AuthenticateResult = new AuthenticateResult(user.Subject, name, identityProvider: user.Provider);
             return Task.FromResult(0);
         }
 

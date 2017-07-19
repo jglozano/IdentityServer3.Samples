@@ -7,6 +7,7 @@ using IdentityServer3.Core.Services;
 using Microsoft.Owin.Security.WsFederation;
 using Serilog;
 using IdentityServer3.Host.Config;
+using WebHost.Services;
 
 [assembly: OwinStartup(typeof(WebHost.Startup))]
 
@@ -25,6 +26,8 @@ namespace WebHost
             var factory = new IdentityServerServiceFactory()
                 .UseInMemoryClients(Clients.Get())
                 .UseInMemoryScopes(Scopes.Get());
+
+            factory.Register(new Registration<IConfigurationService, ConfigurationService>());
             factory.UserService = new Registration<IUserService>(typeof(ExternalRegistrationUserService));
 
             var options = new IdentityServerOptions
@@ -33,7 +36,7 @@ namespace WebHost
                 Factory = factory,
                 AuthenticationOptions = new AuthenticationOptions
                 {
-                    EnableLocalLogin = false,
+                    EnableLocalLogin = true,
                     IdentityProviders = ConfigureIdentityProviders
                 }
             };
