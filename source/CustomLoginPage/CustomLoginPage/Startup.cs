@@ -34,6 +34,7 @@ namespace CustomLoginPage
                     
                     AuthenticationOptions = new AuthenticationOptions
                     {
+                        
                     },
 
                     EventsOptions = new EventsOptions

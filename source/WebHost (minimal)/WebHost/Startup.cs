@@ -13,9 +13,9 @@ namespace WebHost
     {
         public void Configuration(IAppBuilder app)
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Trace(outputTemplate: "{Timestamp} [{Level}] ({Name}){NewLine} {Message}{NewLine}{Exception}")
-                .CreateLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //    .WriteTo.Trace(outputTemplate: "{Timestamp} [{Level}] ({Name}){NewLine} {Message}{NewLine}{Exception}")
+            //    .CreateLogger();
 
             var factory = new IdentityServerServiceFactory()
                         .UseInMemoryUsers(Users.Get())
@@ -28,7 +28,7 @@ namespace WebHost
                 Factory = factory,
             };
 
-            app.Map("/core", idsrvApp =>
+            app.Map("/identity", idsrvApp =>
             {
                 idsrvApp.UseIdentityServer(options);
             });
